@@ -1,53 +1,55 @@
 version: "3.8"
 
 ### Uses a network within Docker to allow Pi-Hole and Unbound to communicate.
-### Unbound is not accessible from anywhere except Pi-Hole
-### Consider docker-compose.yml.alternative if you want to use Pi-Hole for DHCP
+### Exposes pihole and unbound ports on the same ports on the host machine. 
+### Any requests to these ports on the host machine will route to containers.
+
+### Modeled on https://github.com/IAmStoxe/wirehole and https://hub.docker.com/r/klutchell/unbound/
 
 services:
+  unbound:
+    container_name: unbound
+    image: klutchell/unbound:latest
+    restart: unless-stopped
+    ports:
+      - '5053:5053/udp'
+    volumes:
+      - './unbound:/opt/unbound/etc/unbound/'
+    networks:
+      internal:
+        ipv4_address: 10.2.0.200
   pihole:
     depends_on:
       - unbound
     container_name: pihole
     image: pihole/pihole:latest
-    ### For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-    ### (This is what docker-compose.yml.alternative is for)
+    restart: unless-stopped
     ports:
-      - "53:53"
-      - "53:53/udp"
-      - "80:80"
-      - "443:443"
-    ### Only needed for DHCP
-    #  - "67:67/udp"
-    environment:
-      TZ: 'America/Chicago'
-      WEBPASSWORD: ${WEB_PASS}
-    ### Required for DHCP
-    #  ServerIP: ${HOST_IP}
-      PIHOLE_DNS_: '172.30.0.2'
+      - '53:53'
+      - '53:53/udp'
+      - '80:80'
+      - '443:443'
     volumes:
       - './etc-pihole:/etc/pihole'
-    ### Required for DHCP
-    ### https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-    #cap_add:
-    #  - NET_ADMIN
-    restart: unless-stopped
+      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    environment:
+      TZ: 'America/New_York'
+      WEBPASSWORD: ${WEB_PASS}
+      ServerIP: ${HOST_IP}
+      DNS1: 10.2.0.200
+      DNS2: 10.2.0.200
+    cap_add:
+      - NET_ADMIN
     dns:
-      - '172.30.0.2'
+      - '127.0.0.1'
+      - '10.2.0.200'
     networks:
       internal:
-        ipv4_address: 172.30.0.3
-  unbound:
-    container_name: unbound
-    image: bdagenais/unbound:latest
-    restart: unless-stopped
-    networks:
-      internal:
-        ipv4_address: 172.30.0.2
+        ipv4_address: 10.2.0.100
+
 networks:
   internal:
     driver: bridge
     ipam:
-     config:
-       - subnet: 172.30.0.0/16
-         gateway: 172.30.0.1
+      config:
+        - subnet: 10.2.0.0/24
