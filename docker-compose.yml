@@ -32,6 +32,12 @@ services:
     volumes:
       - './etc-pihole:/etc/pihole'
       - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+      # See https://www.reddit.com/r/pihole/comments/llw94y/using_padd_with_pihole_in_docker/
+      - '${HOME}/padd:/padd'
+      - '/proc/loadavg:/proc/loadavg:ro'
+      - '/proc/meminfo:/proc/meminfo:ro'
+      - '/sys/class/thermal:/sys/class/thermal:ro'
+      - '/sys/devices/system/cpu:/sys/devices/system/cpu:ro'
     environment:
       ServerIP: ${ServerIP}
       TZ: ${TZ}
