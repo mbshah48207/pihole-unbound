@@ -33,11 +33,14 @@ services:
       - './etc-pihole:/etc/pihole'
       - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
     environment:
-      TZ: 'America/New_York'
-      WEBPASSWORD: ${WEB_PASS}
-      ServerIP: ${HOST_IP}
-      DNS1: 10.2.0.200
-      DNS2: 10.2.0.200
+      ServerIP: ${ServerIP}
+      TZ: ${TZ}
+      WEBPASSWORD: ${WEBPASSWORD}
+      REV_SERVER: ${REV_SERVER}
+      REV_SERVER_TARGET: ${REV_SERVER_TARGET}
+      REV_SERVER_DOMAIN: ${REV_SERVER_DOMAIN}
+      REV_SERVER_CIDR: ${REV_SERVER_CIDR}
+      PIHOLE_DNS_: 10.2.0.200
     cap_add:
       - NET_ADMIN
     dns:
